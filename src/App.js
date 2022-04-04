@@ -1,22 +1,28 @@
 import logo from './logo.svg';
 import './App.css';
+import React, { useState, useEffect } from 'react';
 
 function App() {
+  const [accoundId, setAccountId] = useState(0);
+
+  useEffect(() => {
+    document.title = `NFT Wallet`;
+
+    if (typeof window.ethereum !== 'undefined') {
+      console.log('MetaMask is installed!');
+      setAccountId("Metamask extension is detected, nice");
+    } else {
+      setAccountId("Metamask extension is NOT detected");
+    }
+  });
+  
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          Idk
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <div>{accoundId}</div>
       </header>
     </div>
   );
