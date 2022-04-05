@@ -23,7 +23,11 @@ function App() {
   const [chosenToken, setChosenToken]  = useState({});
   const [mainToken, setMainToken] = useState({});
 
+  const [whitelist, setWhitelist] = useState({});
+  const [tempWhitelist, setTempWhitelist] = useState("");
+
   async function handleTempTokenAddress(_tempTokenAddress) {
+    // tempTokenAddress watcher: used to do something whenever the tempTokenAddress input changes
     // evt.preventDefault();
     setTempTokenAddress(_tempTokenAddress);
     setTempTokenDecimal("");
@@ -50,7 +54,7 @@ function App() {
     
   }
 
-  async function handleAddToken() {
+  function handleAddToken() {
     let tempTokens = tokens;
 
     if (!(network.chainId in tempTokens)) {
@@ -61,6 +65,10 @@ function App() {
     console.log(tempTokens);
     setTokens({...tempTokens});
     localStorage.setItem("tokens", JSON.stringify(tempTokens));
+  }
+
+  function removeToken() {
+
   }
 
   async function tokenDetailsSetter() {
@@ -129,6 +137,21 @@ function App() {
       _tempToken.currency = "ETH";
       setMainToken(_tempToken)
     }
+  }
+
+  function handleTempWhitelist(address) {
+    setTempWhitelist(address);
+  }
+
+  function handleAddWhitelist() {
+    let _whitelist = whitelist;
+    _whitelist[tempWhitelist] = null;
+    setWhitelist({..._whitelist});
+    localStorage.setItem("whitelist", JSON.stringify(_whitelist));
+  }
+
+  function removeWhitelist(address) {
+    
   }
 
   async function login() {
@@ -285,6 +308,12 @@ const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecim
       _tempTokens = {};
     }
     setTokens(_tempTokens);
+
+    let _whitelist = JSON.parse(localStorage.getItem("whitelist"));
+    if (!_whitelist) {
+      _whitelist = {};
+    }
+    setWhitelist(_whitelist);
     
   }, []);
 
@@ -320,6 +349,10 @@ const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecim
   }, [ethProvider, accoundId]);
 
   // useEffect(() => {
+  //   localStorage.setItem("whitelist", whitelist);
+  // }, [whitelist]);
+
+  // useEffect(() => {
   //   if (ethProvider) {
   //     if (network) {
         
@@ -339,32 +372,57 @@ const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecim
         <div>accountid: {accoundId}</div>
         <button onClick={() => payMetamask("0xf9B98f63519D618E8006D5b721f38f00dfda9B1a", "0xffCF56AC374745c7E3e5dBC3385A00b4066d139B", "0.000001")}>SEND</button>
         <button onClick={() => payMetamask2("0xf9B98f63519D618E8006D5b721f38f00dfda9B1a", "0xffCF56AC374745c7E3e5dBC3385A00b4066d139B", "150000000")}>SEND2</button>
-<div style={{borderBottom: "3px solid white", width: "100%", marginBottom: "50px"}}></div>
+<div style={{borderBottom: "3px solid black", width: "100%", marginBottom: "50px"}}></div>
+<div>Adding address token for {network?.name} network</div>
 <input type="text" value={tempTokenAddress} onChange={e => handleTempTokenAddress(e.target.value)} />
 <div>decimal {tempTokenDecimal}</div>
 <div>curr {tempTokenCurrency}</div>
 <div>balance of this token {tempTokenBalance}</div>
 <button onClick={() => handleAddToken()}>Add Token</button>
-<div style={{borderBottom: "3px solid white", width: "100%", marginBottom: "50px"}}></div>
+<div style={{borderBottom: "3px solid black", width: "100%", marginBottom: "50px"}}></div>
 {/* <div>{JSON.stringify(tokens)}</div> */}
+<input type="text" value={tempWhitelist} onChange={e => handleTempWhitelist(e.target.value)} />
+<button onClick={() => handleAddWhitelist()}>Add whitelist</button>
+<div style={{borderBottom: "3px solid black", width: "100%", marginBottom: "50px"}}></div>
+<div className='lists'>
+  <div className='assets'>
+    <h2>{network?.name} saved tokens (assets)</h2>
+    <ul>
+      {
+        <li>
+          DEFAULT TOKEN
+          <div>{mainToken.balance} {mainToken.currency} <button>Send</button></div>
+        </li>
+      }
+      {
+        Object.keys(chosenToken).map((token, i) =>
+        <li key={i}>
+          {token}
+          <div>{chosenToken[token].balance} {chosenToken[token].currency} <button>Send</button></div>
+        </li>
+        )
+      }
+    </ul>
+    <button>Add new token!</button>
+  </div>
+  <div className='whitelist'>
+    <h2>Whitelist Addresses</h2>
 
+    <ul>
+      {
+        Object.keys(whitelist).map((item, i) => 
+        <li key={i}>{item}</li>
+        )
+      }
+    </ul>
+
+    <button>Add whitelist</button>
+  </div>
+</div>
 <div>
-  {network?.name} saved tokens
+  <h2>Some known problems</h2>
   <ul>
-    {
-      <li>
-        DEFAULT TOKEN
-        <div>{mainToken.balance} {mainToken.currency}</div>
-      </li>
-    }
-    {
-      Object.keys(chosenToken).map((token, i) =>
-      <li key={i}>
-        {token}
-        <div>{chosenToken[token].balance} {chosenToken[token].currency}</div>
-      </li>
-      )
-    }
+  <li>Not working: try to open metamask extension first to make sure it has started running in the background before using this site</li>
   </ul>
 </div>
       </header>
