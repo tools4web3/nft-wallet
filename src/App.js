@@ -46,14 +46,6 @@ function App() {
       const signer = ethProvider.getSigner();
   
       const contract = new ethers.Contract(tempSendToken, ERC20ABI, signer);
-      // const params = [{
-      //   from: sender,
-      //   to: receiver,
-      //   // value: ethers.utils.parseUnits(ether, 'ether').toHexString()
-      //   data: erc20.methods
-      //         .transfer(receiver, ether)
-      //         .encodeABI(),
-      // }];
   
       const transactionHash = await contract.transfer(
         tempSendAddress,
@@ -64,16 +56,6 @@ function App() {
       );
       console.log('transactionHash', transactionHash);
   
-      // console.log("contract", contract, contract.address);
-      // const getBalanceDai = await contract.balanceOf(sender);
-      
-      // console.log("contract.balanceOf()", ethers.utils.formatUnits(getBalanceDai, 18));
-      // const getDecimals = await contract.decimals();
-      // // const _tempTokenDecimals = 
-      // console.log("getDecimals", getDecimals);
-  
-      // const _tempTokenCurrency = await contract.symbol();
-      // console.log("_tempTokenCurrency", _tempTokenCurrency);
     } else {
       const params = [{
         from: accountId,
@@ -88,16 +70,12 @@ function App() {
 
   async function handleTempTokenAddress(_tempTokenAddress) {
     // tempTokenAddress watcher: used to do something whenever the tempTokenAddress input changes
-    // evt.preventDefault();
     setTempTokenAddress(_tempTokenAddress);
     setTempTokenDecimal("");
     setTempTokenCurrency("");
     setTempTokenBalance("");
-    // console.log(tempTokenAddress);
+
     const signer = ethProvider.getSigner();
-    // How many tokens?
-    const numberOfDecimals = 18;
-    const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecimals); // NEED TO HANDLE THIS PROPERLY
 
     const contract = new ethers.Contract(_tempTokenAddress, ERC20ABI, signer);
 
@@ -110,8 +88,6 @@ function App() {
     const getBalance = await contract.balanceOf(accountId);
     const _tempTokenBalance = ethers.utils.formatUnits(getBalance, _tempTokenDecimals);
     setTempTokenBalance(_tempTokenBalance);
-
-    
   }
 
   function handleAddToken() {
@@ -169,93 +145,17 @@ console.log("signer", signer);
     setAccountId(accId);
 // console.log(await ethProvider.getBalance("ethers.eth"));
   }
-
-  async function payMetamask(sender, receiver, ether) {
-    // Acccounts now exposed
-    
-    const params = [{
-      from: sender,
-      to: receiver,
-      value: ethers.utils.parseUnits(ether, 'ether').toHexString()
-    }];
-
-    const transactionHash = await ethProvider.send('eth_sendTransaction', params);
-
-    console.log(transactionHash);
-  }
-
-  async function payMetamask2(sender, receiver, ether) {
-    // Acccounts now exposed
-    // const KOVAN_DAI = "0xf9B98f63519D618E8006D5b721f38f00dfda9B1a";
-    // const DAIADDRESS = "0x6b175474e89094c44da98b954eedeac495271d0f";
-    const KOVAN_DAI2 = "0x04df6e4121c27713ed22341e7c7df330f56f289b";
-
-    const signer = ethProvider.getSigner();
-    // How many tokens?
-const numberOfDecimals = 18;
-const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecimals); // NEED TO HANDLE THIS PROPERLY
-
-    const erc20 = new ethers.Contract(KOVAN_DAI2, ERC20ABI, signer);
-    // const params = [{
-    //   from: sender,
-    //   to: receiver,
-    //   // value: ethers.utils.parseUnits(ether, 'ether').toHexString()
-    //   data: erc20.methods
-    //         .transfer(receiver, ether)
-    //         .encodeABI(),
-    // }];
-
-    // const result = await erc20.transfer(
-    //   receiver,
-    //   numberOfTokens,
-    //   {
-    //     from: sender,
-    //   },
-    // );
-    // console.log('result', result);
-
-    console.log("erc20", erc20, erc20.address);
-    const getBalanceDai = await erc20.balanceOf(sender);
-    
-    console.log("erc20.balanceOf()", ethers.utils.formatUnits(getBalanceDai, 18));
-    const getDecimals = await erc20.decimals();
-    // const _tempTokenDecimals = 
-    console.log("getDecimals", getDecimals);
-
-    const _tempTokenCurrency = await erc20.symbol();
-    console.log("_tempTokenCurrency", _tempTokenCurrency);
-
-    // const transactionHash = await ethProvider.send('eth_sendTransaction', params);
-
-    // console.log(transactionHash);
-  }
   
   // only after render
   useEffect(() => {
-    document.title = `NFT Wallet`;
-
-    // async function initializeEthers() {
-    //   const prov = await ethProvider.send("eth_requestAccounts", []);
-    //   console.log("prov", prov);
-    //   // const signer = provider.getSigner();
-    //   // console.log("Account:", await signer.getAddress());
-    // }
-
-    // initializeEthers();
-
     async function initEthers() {
-      
-      // const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
       const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
       setEthProvider(provider);
       console.log("provider", provider);
-      // console.log("network:",await provider.getNetwork());
+
       const netObj = await provider.getNetwork();
       setNetwork(netObj);
-      // const prov = await ethProvider.send("eth_requestAccounts", []);
-      // console.log("prov", prov);
 
-      // const isMetaMaskConnected = await checkConnected();
       console.log("netObj", netObj);
       // console.log("isMetaMaskConnected", isMetaMaskConnected);
 
@@ -271,22 +171,6 @@ const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecim
       // console.log("ethProvider", ethProvider);
       
     }
-
-    // const checkConnected = async () => {
-    //   const accounts = await ethProvider.listAccounts();
-    //   return accounts.length > 0;
-    // }
-
-//     async function checkMetamaskConnected() {
-//       if (ethProvider) {
-//         login();
-// //         const signer = ethProvider.getSigner();
-// // console.log("signer", signer);
-// //     // console.log("Account:", await signer.getAddress());
-// //         const accId = await signer.getAddress();
-// //         setAccountId(accId);
-//       }
-//     }
 
     if (typeof window.ethereum !== 'undefined') {
       // console.log('MetaMask is installed!');
@@ -337,7 +221,7 @@ const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecim
   // checking accounts state
   useEffect(() => {
     if (ethProvider) {
-      if (accounts && accounts.length > 0) {
+      if (accounts && accounts.length > 0) { // if logged in already, call login (it will handle the already login)
         login();
       }
     }
@@ -441,15 +325,10 @@ const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecim
   return (
     <div className="App">
       <header className="App-header">
-        <p>
-          Idk
-        </p>
         <div>{notice}</div>
         <div>network name: {network?.name}</div>
         <button onClick={() => login()}>CONNECT</button>
         <div>accountid: {accountId}</div>
-        <button onClick={() => payMetamask("0xf9B98f63519D618E8006D5b721f38f00dfda9B1a", "0xffCF56AC374745c7E3e5dBC3385A00b4066d139B", "0.000001")}>SEND</button>
-        <button onClick={() => payMetamask2("0xf9B98f63519D618E8006D5b721f38f00dfda9B1a", "0xffCF56AC374745c7E3e5dBC3385A00b4066d139B", "150000000")}>SEND2</button>
 <div style={{borderBottom: "3px solid black", width: "100%", marginBottom: "50px"}}></div>
 <div>Adding address token for {network?.name} network</div>
 <input type="text" value={tempTokenAddress} onChange={e => handleTempTokenAddress(e.target.value)} />
@@ -458,28 +337,41 @@ const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecim
 <div>balance of this token {tempTokenBalance}</div>
 <button onClick={() => handleAddToken()}>Add Token</button>
 <div style={{borderBottom: "3px solid black", width: "100%", marginBottom: "50px"}}></div>
-{/* <div>{JSON.stringify(tokens)}</div> */}
+
 <input type="text" value={tempWhitelist} onChange={e => handleTempWhitelist(e.target.value)} />
 <button onClick={() => handleAddWhitelist()}>Add whitelist</button>
 <div style={{borderBottom: "3px solid black", width: "100%", marginBottom: "50px"}}></div>
 <div className='lists'>
   <div className='assets'>
     <h2>{network?.name} saved tokens (assets)</h2>
-    <ul>
+    <ul className='token-list'>
       {
         <li>
-          DEFAULT TOKEN
-          <div>{mainToken.balance} {mainToken.currency} <button onClick={() => handleSend(true, mainToken.decimals)}>Send</button></div>
+          <div className='token-content'>
+            <div className='token-address'>DEFAULT TOKEN</div>
+            <div className='token-balance'>{mainToken.balance} {mainToken.currency}</div>
+          </div>
+          <button className='token-send-button' onClick={() => handleSend(true, mainToken.decimals)}>Send</button>
         </li>
       }
       {
         Object.keys(chosenToken).map((token, i) =>
         <li key={i}>
-          {token}
-          <div>{chosenToken[token].balance} {chosenToken[token].currency} <button onClick={() => handleSend(false, chosenToken[token].decimals, token)}>Send</button></div>
+          <div className='token-content'>
+            <div className='token-address'>{token}</div>
+            <div className='token-balance'>{chosenToken[token].balance} {chosenToken[token].currency}</div>
+          </div>
+          <button className='token-send-button' onClick={() => handleSend(false, chosenToken[token].decimals, token)}>Send</button>
         </li>
         )
       }
+      <li>
+      <div className='token-content'>
+        <div className='token-address'><input type="text" placeholder="input new token address here" className='input-token' value={tempTokenAddress} onChange={e => handleTempTokenAddress(e.target.value)} /></div>
+        <div className='token-balance'>{tempTokenBalance} {tempTokenCurrency}{tempTokenDecimal ? `, decimal ${tempTokenDecimal}` : '\u00A0'}</div>
+      </div>
+      <button className='token-send-button' onClick={() => handleAddToken()}>Add Token</button>
+      </li>
     </ul>
     <button>Add new token!</button>
     <div className="modal-send">
