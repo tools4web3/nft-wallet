@@ -101,6 +101,11 @@ function App() {
     console.log(tempTokens);
     setTokens({...tempTokens});
     localStorage.setItem("tokens", JSON.stringify(tempTokens));
+
+    setTempTokenAddress("");
+    setTempTokenDecimal("");
+    setTempTokenCurrency("");
+    setTempTokenBalance("");
   }
 
   function removeToken() {
@@ -373,7 +378,7 @@ console.log("signer", signer);
       <button className='token-send-button' onClick={() => handleAddToken()}>Add Token</button>
       </li>
     </ul>
-    <button>Add new token!</button>
+
     <div className="modal-send">
       <div>Sending via {network?.name} {tempSendToken ? `on token address ${tempSendToken} (your balance ${chosenToken[tempSendToken].balance} ${chosenToken[tempSendToken].currency})` : `on native token (your balance ${mainToken.balance} ${mainToken.currency})`}</div>
       <input type='text' value={tempSendAmount} onChange={e => handleSendAmount(e.target.value)}/>
@@ -384,15 +389,19 @@ console.log("signer", signer);
   <div className='whitelist'>
     <h2>Whitelist Addresses</h2>
 
-    <ul>
+    <ul className='whitelist-list'>
       {
         Object.keys(whitelist).map((item, i) => 
-        <li key={i}>{item}</li>
+        <li key={i}><div className='whitelist-content'><div className='whitelist-address'>{item}</div></div></li>
         )
       }
+      <li>
+      <div className='whitelist-content'>
+        <input className='input-whitelist' placeholder='input new whitelist address here' type="text" value={tempWhitelist} onChange={e => handleTempWhitelist(e.target.value)} />
+      </div>
+      <button onClick={() => handleAddWhitelist()}>Add whitelist</button>
+      </li>
     </ul>
-
-    <button>Add whitelist</button>
   </div>
 </div>
 <div>
