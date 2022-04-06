@@ -1,26 +1,37 @@
-.App-header {
-  background-color: #ffffff;
+.header {
+  padding: 30px 15px;
   display: flex;
-  flex-direction: column;
-  color: #282c34;
+  background: #000000;
+  color: #ffffff;
 }
 
-.App-link {
-  color: #61dafb;
+.network-info {
+  flex-grow: 1;
 }
 
 h2 {
   font-size: 200%;
+  padding: 15px;
 }
 
-.lists {
-  /* display: flex;
+h3 {
+  font-size: 150%;
+}
+
+.list-content {
+  display: flex;
   flex-direction: column;
-  flex-flow: wrap; */
+  flex-flow: wrap;
 }
 
 .assets, .whitelist {
   /* width: 50%; */
+  box-sizing: border-box;
+}
+
+.assets {
+  flex-grow: 1;
+  border-right: 1px solid #cfcfcf
 }
 
 .input-token {
@@ -63,10 +74,6 @@ h2 {
 
 }
 
-.modal-send {
-  background: blue;
-}
-
 .whitelist-list {
   background: #f7f7f7;
 }
@@ -87,7 +94,7 @@ h2 {
 }
 
 .input-whitelist {
-  min-width: 360px;
+  min-width: 500px;
   width: 100%;
   max-width: 90%;
   background: transparent;
@@ -96,4 +103,60 @@ h2 {
   border-bottom: 2px solid #d3d3d3;
   outline: none!important;
   padding: 2px 0;
+}
+
+.no-metamask {
+  text-align: center;
+  min-height: 500px;
+  display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay {
+  background: #000000bf;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-send {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 5px;
+}
+
+.modal-content {
+  padding: 15px 0 0 0;
+}
+
+.modal-text {
+  margin-bottom: 15px;
+}
+.modal-content input {
+  width: 100%;
+    border: 0;
+    padding: 15px 0;
+    border-bottom: 2px solid #ddd;
+    font-size: 109%;
+    background: transparent;
+    outline: none !important;
+}
+
+.modal-button-group {
+  margin-top: 30px;
+}
+
+input[type="text"]:focus {
+  border-color: blue;
+}
+
+.list-content button {
+  display: block;
+  margin-left: 15px;
 }
