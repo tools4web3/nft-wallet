@@ -1,12 +1,12 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
-import { ERC20ABI } from './constants/constants.js';
+import { ERC20ABI, CHAIN_DETAILS } from './constants/constants.js';
 import { ethers } from "ethers";
 
 function App() {
   const [notice, setNotice] = useState(null);
 
-  const [accoundId, setAccountId] = useState(null);
+  const [accountId, setAccountId] = useState(null);
   const [ethProvider, setEthProvider] = useState(null);
 
   const [network, setNetwork] = useState(null);
@@ -25,6 +25,66 @@ function App() {
 
   const [whitelist, setWhitelist] = useState({});
   const [tempWhitelist, setTempWhitelist] = useState("");
+
+  const [tempSendAmount, setTempSendAmount] = useState(0);
+  const [tempSendAddress, setTempSendAddress] = useState("");
+  const [tempSendToken, setTempSendToken] = useState("");
+  const [tempSendDecimals, setTempSendDecimals] = useState(0);
+
+  function handleSendAmount(value) {
+    setTempSendAmount(value);
+  }
+
+  function handleSendAddress(value) {
+    setTempSendAddress(value);
+  }
+
+  async function handleSendInputs() {
+    // real send happens here, should check if address is whitelisted, validate amount value
+
+    if (tempSendToken) {
+      const signer = ethProvider.getSigner();
+  
+      const contract = new ethers.Contract(tempSendToken, ERC20ABI, signer);
+      // const params = [{
+      //   from: sender,
+      //   to: receiver,
+      //   // value: ethers.utils.parseUnits(ether, 'ether').toHexString()
+      //   data: erc20.methods
+      //         .transfer(receiver, ether)
+      //         .encodeABI(),
+      // }];
+  
+      const transactionHash = await contract.transfer(
+        tempSendAddress,
+        ethers.utils.parseUnits(tempSendAmount, tempSendDecimals),
+        {
+          from: accountId,
+        },
+      );
+      console.log('transactionHash', transactionHash);
+  
+      // console.log("contract", contract, contract.address);
+      // const getBalanceDai = await contract.balanceOf(sender);
+      
+      // console.log("contract.balanceOf()", ethers.utils.formatUnits(getBalanceDai, 18));
+      // const getDecimals = await contract.decimals();
+      // // const _tempTokenDecimals = 
+      // console.log("getDecimals", getDecimals);
+  
+      // const _tempTokenCurrency = await contract.symbol();
+      // console.log("_tempTokenCurrency", _tempTokenCurrency);
+    } else {
+      const params = [{
+        from: accountId,
+        to: tempSendAddress,
+        value: ethers.utils.parseUnits(tempSendAmount, 'ether').toHexString(),
+      }];
+  
+      const transactionHash = await ethProvider.send('eth_sendTransaction', params);
+      console.log("transactionHash", transactionHash);
+    }
+  }
 
   async function handleTempTokenAddress(_tempTokenAddress) {
     // tempTokenAddress watcher: used to do something whenever the tempTokenAddress input changes
@@ -47,7 +107,7 @@ function App() {
     const _tempTokenCurrency = await contract.symbol();
     setTempTokenCurrency(_tempTokenCurrency);
 
-    const getBalance = await contract.balanceOf(accoundId);
+    const getBalance = await contract.balanceOf(accountId);
     const _tempTokenBalance = ethers.utils.formatUnits(getBalance, _tempTokenDecimals);
     setTempTokenBalance(_tempTokenBalance);
 
@@ -71,73 +131,16 @@ function App() {
 
   }
 
-  async function tokenDetailsSetter() {
-    // if (tokens) {
-    //   if (network) {
-      let _chosenToken = {}
-        if (accoundId && ethProvider && tokens && network && network.chainId in tokens) {
-          console.log("asup teu?");
-          const signer = ethProvider.getSigner();
-          
-          
-          await Promise.all(Object.keys(tokens[network.chainId]).map(async (_tempTokenAddress, i) => {
-            try {
-
-              // console.log("i _tempTokenAddress", _tempTokenAddress, i)
-              const contract = new ethers.Contract(_tempTokenAddress, ERC20ABI, signer);
-  // console.log("contract jalan teu?", contract);
-              const _tempTokenDecimals = await contract.decimals();
-  // console.log("terus errorna dimana?1");
-  
-              const _tempTokenCurrency = await contract.symbol();
-  // console.log("terus errorna dimana?2");
-  
-              const getBalance = await contract.balanceOf(accoundId);
-  // console.log("terus errorna dimana?3");
-  
-              const _tempTokenBalance = ethers.utils.formatUnits(getBalance, _tempTokenDecimals);
-  // console.log("terus errorna dimana?");
-              _chosenToken[_tempTokenAddress] = {};
-              _chosenToken[_tempTokenAddress].currency = _tempTokenCurrency;
-              _chosenToken[_tempTokenAddress].balance = _tempTokenBalance;
-              // console.log("i", i, _tempTokenBalance, _chosenToken);
-            } catch(e) {
-              
-            }
-          }));
-        }
-    //   }
-    // }
-    setChosenToken(_chosenToken);
-    console.log("_chosenToken", _chosenToken);
-    // const signer = ethProvider.getSigner();
-
-    // const contract = new ethers.Contract(_tempTokenAddress, ERC20ABI, signer);
-
-    // const _tempTokenDecimals = await contract.decimals();
-    // const _tempTokenCurrency = await contract.symbol();
-    // const getBalance = await contract.balanceOf(accoundId);
-    // const _tempTokenBalance = ethers.utils.formatUnits(getBalance, _tempTokenDecimals);
-// const _tempTokenBalance ="";
-// const _tempTokenCurrency ="";
-
-//     return <div>{_tempTokenBalance} {_tempTokenCurrency}</div>;
-  }
-
-  async function mainTokenDetailSetter() {
-    if (accoundId && ethProvider) {
-      let _tempToken = {}
-      // console.log("ethProvider", ethProvider);
-      const _tempRawBalance = await ethProvider.getBalance(accoundId);
-      // const _tempMainTokenDecimals = 0//await ethProvider.decimals();
-      // const _tempMainTokenCurrency = 0//await ethProvider.symbol();
-      const _tempMainTokenBalance = ethers.utils.formatEther(_tempRawBalance);
-      // console.log("_tempMainTokenBalance", _tempMainTokenBalance, _tempMainTokenDecimals, _tempMainTokenCurrency);
-      _tempToken.balance = _tempMainTokenBalance;
-      _tempToken.currency = "ETH";
-      setMainToken(_tempToken)
+  async function handleSend(native = false, decimals, tokenAddress) {
+    if (native) {
+      setTempSendToken("");
+    } else {
+      setTempSendToken(tokenAddress);
     }
+    setTempSendDecimals(decimals);
   }
+
+  
 
   function handleTempWhitelist(address) {
     setTempWhitelist(address);
@@ -341,12 +344,87 @@ const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecim
   }, [ethProvider, accounts]);
 
   useEffect(() => {
+    async function tokenDetailsSetter() {
+      // if (tokens) {
+      //   if (network) {
+        let _chosenToken = {}
+          if (accountId && ethProvider && tokens && network && network.chainId in tokens) {
+            console.log("asup teu?");
+            const signer = ethProvider.getSigner();
+            
+            
+            await Promise.all(Object.keys(tokens[network.chainId]).map(async (_tempTokenAddress, i) => {
+              try {
+  
+                // console.log("i _tempTokenAddress", _tempTokenAddress, i)
+                const contract = new ethers.Contract(_tempTokenAddress, ERC20ABI, signer);
+    // console.log("contract jalan teu?", contract);
+                const _tempTokenDecimals = await contract.decimals();
+    // console.log("terus errorna dimana?1");
+    
+                const _tempTokenCurrency = await contract.symbol();
+    // console.log("terus errorna dimana?2");
+    
+                const getBalance = await contract.balanceOf(accountId);
+    // console.log("terus errorna dimana?3");
+    
+                const _tempTokenBalance = ethers.utils.formatUnits(getBalance, _tempTokenDecimals);
+    // console.log("terus errorna dimana?");
+                _chosenToken[_tempTokenAddress] = {};
+                _chosenToken[_tempTokenAddress].currency = _tempTokenCurrency;
+                _chosenToken[_tempTokenAddress].balance = _tempTokenBalance;
+                _chosenToken[_tempTokenAddress].decimals = _tempTokenDecimals;
+                // console.log("i", i, _tempTokenBalance, _chosenToken);
+              } catch(e) {
+                
+              }
+            }));
+          }
+      //   }
+      // }
+      setChosenToken(_chosenToken);
+      console.log("_chosenToken", _chosenToken);
+      // const signer = ethProvider.getSigner();
+  
+      // const contract = new ethers.Contract(_tempTokenAddress, ERC20ABI, signer);
+  
+      // const _tempTokenDecimals = await contract.decimals();
+      // const _tempTokenCurrency = await contract.symbol();
+      // const getBalance = await contract.balanceOf(accountId);
+      // const _tempTokenBalance = ethers.utils.formatUnits(getBalance, _tempTokenDecimals);
+  // const _tempTokenBalance ="";
+  // const _tempTokenCurrency ="";
+  
+  //     return <div>{_tempTokenBalance} {_tempTokenCurrency}</div>;
+    }
     tokenDetailsSetter();
-  }, [ethProvider, tokens, network, accoundId]);
+  }, [ethProvider, tokens, network, accountId]);
 
   useEffect(() => {
+    async function mainTokenDetailSetter() {
+      if (accountId && ethProvider) {
+        let _tempToken = {}
+        // console.log("ethProvider", ethProvider);
+        const _tempRawBalance = await ethProvider.getBalance(accountId);
+        // const _tempMainTokenDecimals = 0//await ethProvider.decimals();
+        // const _tempMainTokenCurrency = 0//await ethProvider.symbol();
+        const _tempMainTokenBalance = ethers.utils.formatEther(_tempRawBalance);
+        // console.log("_tempMainTokenBalance", _tempMainTokenBalance, _tempMainTokenDecimals, _tempMainTokenCurrency);
+        _tempToken.balance = _tempMainTokenBalance;
+        _tempToken.currency = "";
+  
+        if (network) {
+          if (network.chainId in CHAIN_DETAILS) {
+            _tempToken.currency = CHAIN_DETAILS[network.chainId].symbol;
+            _tempToken.decimals = CHAIN_DETAILS[network.chainId].decimals;
+          }
+        }
+        setMainToken(_tempToken)
+      }
+    }
+
     mainTokenDetailSetter();
-  }, [ethProvider, accoundId]);
+  }, [ethProvider, accountId, network]);
 
   // useEffect(() => {
   //   localStorage.setItem("whitelist", whitelist);
@@ -369,7 +447,7 @@ const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecim
         <div>{notice}</div>
         <div>network name: {network?.name}</div>
         <button onClick={() => login()}>CONNECT</button>
-        <div>accountid: {accoundId}</div>
+        <div>accountid: {accountId}</div>
         <button onClick={() => payMetamask("0xf9B98f63519D618E8006D5b721f38f00dfda9B1a", "0xffCF56AC374745c7E3e5dBC3385A00b4066d139B", "0.000001")}>SEND</button>
         <button onClick={() => payMetamask2("0xf9B98f63519D618E8006D5b721f38f00dfda9B1a", "0xffCF56AC374745c7E3e5dBC3385A00b4066d139B", "150000000")}>SEND2</button>
 <div style={{borderBottom: "3px solid black", width: "100%", marginBottom: "50px"}}></div>
@@ -391,19 +469,25 @@ const numberOfTokens = 0.0006;// ethers.utils.parseUnits('0.0006', numberOfDecim
       {
         <li>
           DEFAULT TOKEN
-          <div>{mainToken.balance} {mainToken.currency} <button>Send</button></div>
+          <div>{mainToken.balance} {mainToken.currency} <button onClick={() => handleSend(true, mainToken.decimals)}>Send</button></div>
         </li>
       }
       {
         Object.keys(chosenToken).map((token, i) =>
         <li key={i}>
           {token}
-          <div>{chosenToken[token].balance} {chosenToken[token].currency} <button>Send</button></div>
+          <div>{chosenToken[token].balance} {chosenToken[token].currency} <button onClick={() => handleSend(false, chosenToken[token].decimals, token)}>Send</button></div>
         </li>
         )
       }
     </ul>
     <button>Add new token!</button>
+    <div className="modal-send">
+      <div>Sending via {network?.name} {tempSendToken ? `on token address ${tempSendToken} (your balance ${chosenToken[tempSendToken].balance} ${chosenToken[tempSendToken].currency})` : `on native token (your balance ${mainToken.balance} ${mainToken.currency})`}</div>
+      <input type='text' value={tempSendAmount} onChange={e => handleSendAmount(e.target.value)}/>
+      <input type='text' value={tempSendAddress} onChange={e => handleSendAddress(e.target.value)}/>
+      <button onClick={() => handleSendInputs()}>Send</button>
+    </div>
   </div>
   <div className='whitelist'>
     <h2>Whitelist Addresses</h2>
