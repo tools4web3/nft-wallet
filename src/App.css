@@ -87,10 +87,17 @@ h3 {
 
 .whitelist-content {
   flex-grow: 1;
+  display: flex;
 }
 
 .whitelist-address {
   font-size: 128%;
+}
+
+.whitelist-color-output, .address-color-output {
+  width: 27px;
+  height: 27px;
+  border-radius: 100%;
 }
 
 .input-whitelist {
@@ -103,6 +110,10 @@ h3 {
   border-bottom: 2px solid #d3d3d3;
   outline: none!important;
   padding: 2px 0;
+}
+
+.whitelist-color {
+  margin-left: 15px;
 }
 
 .no-metamask {
@@ -131,6 +142,16 @@ h3 {
   border-radius: 5px;
 }
 
+.input-send-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.address-color-output, .address-token-currency {
+  margin-left: 15px;
+}
+
 .modal-content {
   padding: 15px 0 0 0;
 }
@@ -150,6 +171,14 @@ h3 {
 
 .modal-button-group {
   margin-top: 30px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  display: flex;
+}
+
+.modal-button-group button {
+  margin: 0 10px;
+  padding: 10px 15px;
 }
 
 input[type="text"]:focus {
@@ -197,6 +226,10 @@ b {
   border-radius: 5px;
 }
 
+.notifications .item--red {
+  background: #e12525;
+}
+
 .notice {
   color: #fff;
   text-align: center;
@@ -208,4 +241,12 @@ b {
 .footer-ul li {
   list-style: disc;
   margin: 10px 30px;
+}
+
+.button--red {
+  background: #d93434;
+}
+
+.button--green {
+  background: #2eb74b;
 }

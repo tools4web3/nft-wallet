@@ -29,9 +29,11 @@ function App() {
 
   const [whitelist, setWhitelist] = useState({});
   const [tempWhitelist, setTempWhitelist] = useState("");
+  const [tempWhitelistColor, setTempWhitelistColor] = useState("#26cfc4");
 
   const [tempSendAmount, setTempSendAmount] = useState("");
   const [tempSendAddress, setTempSendAddress] = useState("");
+  const [tempSendColor, setTempSendColor] = useState("transparent");
   const [tempSendToken, setTempSendToken] = useState("");
   const [tempSendDecimals, setTempSendDecimals] = useState(0);
 
@@ -42,11 +44,18 @@ function App() {
 
   const [notifications, setNotifications] = useState([]);
 
+  const NOTIFICATION_MAPPER = {
+    'danger': 'item--red',
+    'default': 'item--default'
+  };
+
   function handleSendAmount(value) {
     setTempSendAmount(value);
   }
 
   function handleSendAddress(value) {
+    const _tempSendColor = value in whitelist ? whitelist[value] : "transparent";
+    setTempSendColor(_tempSendColor);
     setTempSendAddress(value);
   }
 
@@ -55,7 +64,7 @@ function App() {
     // console.log("transs tempSendToken", tempSendToken);
     if (!(tempSendAddress in whitelist)) {
       console.log("tempSendToken", tempSendAddress, whitelist);
-      pushNotification(`The address ${tempSendAddress} is not in the whitelist, please add it to the whitelist first!`);
+      pushNotification(`The address ${tempSendAddress} is not in the whitelist, please add it to the whitelist first!`, 'danger');
       return;
     }
 
@@ -90,14 +99,14 @@ function App() {
         );
         console.log("transactionHash", transactionHash);
       }
-  
+      pushNotification("your transaction is being processed, you should get notified by the metamask extension soon", "default");
       setTempSendToken("");
       setTempSendDecimals("");
       setTempSendAddress("");
       setTempSendAmount("");
     
     } catch(e) {
-      pushNotification(e.message);
+      pushNotification(e.message, "danger");
     }
   }
 
@@ -133,7 +142,7 @@ function App() {
       tempTokens[network.chainId] = {};
     }
     tempTokens[network.chainId][tempTokenAddress] = null;
-    pushNotification(`${tempTokenAddress} has been added!`);
+    pushNotification(`${tempTokenAddress} has been added!`, "default");
     console.log(tempTokens);
     setTokens({ ...tempTokens });
     localStorage.setItem("tokens", JSON.stringify(tempTokens));
@@ -191,21 +200,21 @@ function App() {
   function handleAddWhitelist() {
     if (!isAddress(tempWhitelist)) {
       // alert("address invalid!");
-      pushNotification("address is invalid!");
+      pushNotification("address is invalid!", "danger");
       return;
     }
     let _whitelist = whitelist;
-    _whitelist[tempWhitelist] = null;
+    _whitelist[tempWhitelist] = tempWhitelistColor;
     setWhitelist({ ..._whitelist });
     localStorage.setItem("whitelist", JSON.stringify(_whitelist));
-    pushNotification(`${tempWhitelist} has been added to whitelist!`);
+    pushNotification(`${tempWhitelist} has been added to whitelist!`, "default");
     setTempWhitelist("");
   }
 
   function handleRemoveWhitelist() {
     let _whitelist = whitelist;
     delete _whitelist[tempDeleteAddressCandidate];
-    pushNotification(`${tempDeleteAddressCandidate} has been deleted from whitelist!`);
+    pushNotification(`${tempDeleteAddressCandidate} has been removed from whitelist!`, "default");
     setWhitelist({ ..._whitelist });
     localStorage.setItem("whitelist", JSON.stringify(_whitelist));
   }
@@ -244,11 +253,25 @@ function App() {
     const accId = await signer.getAddress();
     setAccountId(accId);
     setIsLoggedIn(true);
+
+    ethProvider.provider.on('accountsChanged', () => {
+      setNotice("An account change is detected, please refresh the page to prevent inconvinience");
+    }); 
     // console.log(await ethProvider.getBalance("ethers.eth"));
+    
   }
 
-  function pushNotification(message) {
-    setNotifications([...notifications, message]);
+  async function handleClickLogin() {
+    try {
+      await login();
+      pushNotification("Login success", "default");
+    } catch(e) {
+      pushNotification(e.message, "danger");
+    }
+  }
+
+  function pushNotification(message, type) {
+    setNotifications([...notifications, {message, type}]);
     // setTimeout(() => {
     //   setNotifications(notifications.slice(0,-1));
     //   console.log(notifications);
@@ -306,6 +329,8 @@ function App() {
           setNotice("A network change is detected, please refresh the page to prevent inconvinience");
         }
       });
+
+      
     }
 
     if (typeof window.ethereum !== "undefined") {
@@ -486,13 +511,13 @@ function App() {
               Logged in as: <b>{accountId}</b>
             </div>
           ) : (
-            <button onClick={() => login()}>Connect to Metamask</button>
+            <button onClick={() => handleClickLogin()}>Connect to Metamask</button>
           )}
           {/* <button onClick={() => login()}>CONNECT</button>
         <div>accountid: {accountId}</div> */}
         </div>
       </header>
-      {metamaskExist ? (
+      {metamaskExist && isLoggedIn ? (
         <div className="list-content">
           <div className="assets">
             <h2>{network?.name} saved tokens (assets)</h2>
@@ -521,7 +546,7 @@ function App() {
                       {chosenToken[token].balance} {chosenToken[token].currency}
                     </div>
                   </div>
-                  <button onClick={() => handleRemoveButton("token", token)}>
+                  <button className="button--red" onClick={() => handleRemoveButton("token", token)}>
                     Remove
                   </button>
                   <button
@@ -569,8 +594,10 @@ function App() {
                 <li key={i}>
                   <div className="whitelist-content">
                     <div className="whitelist-address">{address}</div>
+                    <div className="whitelist-color whitelist-color-output" style={{backgroundColor: address in whitelist ? whitelist[address] : `transparent`}}></div>
                   </div>
                   <button
+                    className="button--red"
                     onClick={() => handleRemoveButton("whitelist", address)}
                   >
                     Remove
@@ -586,6 +613,7 @@ function App() {
                     value={tempWhitelist}
                     onChange={(e) => handleTempWhitelist(e.target.value)}
                   />
+                  <input className="whitelist-color color-picker" type="color" value={tempWhitelistColor} onChange={e => setTempWhitelistColor(e.target.value)} />
                 </div>
                 <button onClick={() => handleAddWhitelist()}>
                   Add whitelist
@@ -597,8 +625,10 @@ function App() {
       ) : (
         <div className="no-metamask">
           <p>
-            Metamask extension is not detected, please install metamask first
-            then reload this page
+            {
+            !isLoggedIn ? `Please connect your metamask first` : `Metamask extension is not detected, please install metamask first
+            then reload this page`
+            }
           </p>
         </div>
       )}
@@ -608,10 +638,13 @@ function App() {
         <ul className="footer-ul">
           <li>
             If not working: try to open metamask extension first to make sure it
-            has started running in the background before using this site
+            has started running in the background before using this site.
           </li>
           <li>
-            If you change account on the metamask but it doesn't change on this
+            To switch account, please switch it on the metamask extension.
+          </li>
+          <li>
+            If you switch account on the metamask but it doesn't change on this
             site, please open the extension again and allow this site to
             connect.
           </li>
@@ -631,21 +664,30 @@ function App() {
                   : `on native token (your balance is ${mainToken.balance} ${mainToken.currency})`}
               </div>
 
+<div className="input-send-container">
+
               <input
                 type="text"
                 placeholder="Target address"
                 value={tempSendAddress}
                 onChange={(e) => handleSendAddress(e.target.value)}
               />
+              <div className="address-color-output" style={{backgroundColor: tempSendColor}}></div>
+              </div>
+              <div className="input-send-container">
               <input
                 type="text"
                 placeholder="Amount"
                 value={tempSendAmount}
                 onChange={(e) => handleSendAmount(e.target.value)}
               />
+              <div className="address-token-currency">
+              {tempSendToken ? chosenToken[tempSendToken].currency : mainToken.currency}
+              </div>
+              </div>
               <div className="modal-button-group">
-                <button onClick={(e) => closeSendForm(e)}>Cancel</button>{" "}
-                <button onClick={() => handleSendInputs()}>Send</button>
+                <button className="button--red" onClick={(e) => closeSendForm(e)}>Cancel</button>{" "}
+                <button className="button--green" onClick={() => handleSendInputs()}>Send</button>
               </div>
             </div>
           </div>
@@ -658,8 +700,8 @@ function App() {
             Are you sure you want to delete {tempDeleteAddressCandidate} from{" "}
             {tempDeleteAddressType}?
             <div className="modal-button-group">
-              <button onClick={(e) => closeDeleteForm(e)}>No</button>{" "}
-              <button onClick={(e) => handleDeleteAddress(e)}>Yes</button>
+              <button className="button--red" onClick={(e) => closeDeleteForm(e)}>No</button>{" "}
+              <button className="button--green" onClick={(e) => handleDeleteAddress(e)}>Yes</button>
             </div>
           </div>
         </div>
@@ -668,7 +710,7 @@ function App() {
         {
           // notification list
           notifications.map((notification, i) => (
-            <li key={i}>{notification}</li>
+            <li key={i} className={NOTIFICATION_MAPPER[notification.type]}>{notification.message}</li>
           ))
         }
       </ul>
