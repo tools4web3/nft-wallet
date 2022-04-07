@@ -1,5 +1,5 @@
 import "./App.css";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ERC20ABI, CHAIN_DETAILS } from "./constants/constants.js";
 import { ethers } from "ethers";
 
@@ -38,6 +38,8 @@ function App() {
   const [tempDeleteAddressCandidate, setTempDeleteAddressCandidate] = useState("");
   const [tempDeleteAddressType, setTempDeleteAddressType] = useState("token");
   const [shouldShowDeletePrompt, setShouldShowDeletePrompt] = useState(false);
+
+  const [notifications, setNotifications] = useState([]);
 
   function handleSendAmount(value) {
     setTempSendAmount(value);
@@ -171,11 +173,25 @@ function App() {
     setTempWhitelist(address);
   }
 
+  function isAddress(address) {
+    try {
+      ethers.utils.getAddress(address);
+    } catch (e) { return false; }
+    return true;
+  }
+
   function handleAddWhitelist() {
+    if (!isAddress(tempWhitelist)) {
+      // alert("address invalid!");
+      pushNotification("address invalid!");
+      return
+    }
     let _whitelist = whitelist;
     _whitelist[tempWhitelist] = null;
     setWhitelist({ ..._whitelist });
     localStorage.setItem("whitelist", JSON.stringify(_whitelist));
+    pushNotification(`${tempWhitelist} has been added to whitelist!`);
+    setTempWhitelist("");
   }
 
   function handleRemoveWhitelist() {
@@ -218,8 +234,34 @@ setShouldShowDeletePrompt(true);
     // console.log("Account:", await signer.getAddress());
     const accId = await signer.getAddress();
     setAccountId(accId);
+    setIsLoggedIn(true);
     // console.log(await ethProvider.getBalance("ethers.eth"));
   }
+
+  function pushNotification(message) {
+    setNotifications([...notifications, message]);
+    // setTimeout(() => {
+    //   setNotifications(notifications.slice(0,-1));
+    //   console.log(notifications);
+    // }, 5000);
+  }
+  // const prevCountRef = useRef([]);
+  // notifications clearer
+  useEffect(() => {
+
+    // if (prevCountRef.current.length > notifications.length) {
+
+    // } else {
+      
+    // }
+    // console.log(prevCountRef.current.length, notifications.length);
+    // prevCountRef.current = notifications;
+    const timer = setTimeout(() => {
+      setNotifications(notifications.slice(1));
+      console.log(notifications);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [notifications])
 
   // only after render
   useEffect(() => {
@@ -285,7 +327,6 @@ setShouldShowDeletePrompt(true);
   useEffect(() => {
     async function checkProvider() {
       if (ethProvider) {
-        console.log("asup 1");
         const _accounts = await ethProvider.listAccounts();
         setAccounts(_accounts);
       }
@@ -414,14 +455,14 @@ setShouldShowDeletePrompt(true);
   // }, [ethProvider, network]);
 
   return (
-    <div className="App">
+    <div className="main">
       <header className="header">
         <div className="network-info">
-          Connected to network: {network?.name}
+          Connected to network: <b>{network?.name}</b>
         </div>
         <div className="account-info">
           {isLoggedIn ? (
-            <div>Logged in as: {accountId}</div>
+            <div>Logged in as: <b>{accountId}</b></div>
           ) : (
             <button onClick={() => login()}>Connect to Metamask</button>
           )}
@@ -540,7 +581,7 @@ setShouldShowDeletePrompt(true);
 
       <div>
         <h2>Some tips</h2>
-        <ul>
+        <ul className="footer-ul">
           <li>
             If not working: try to open metamask extension first to make sure it
             has started running in the background before using this site
@@ -579,8 +620,7 @@ setShouldShowDeletePrompt(true);
                 onChange={(e) => handleSendAmount(e.target.value)}
               />
               <div className="modal-button-group">
-                <button onClick={(e) => closeSendForm(e)}>Cancel</button>
-                <button onClick={() => handleSendInputs()}>Send</button>
+                <button onClick={() => handleSendInputs()}>Send</button> <button onClick={(e) => closeSendForm(e)}>Cancel</button>
               </div>
             </div>
           </div>
@@ -591,12 +631,17 @@ setShouldShowDeletePrompt(true);
         <div className="modal-send">
 
 Are you sure you want to delete {tempDeleteAddressCandidate} from {tempDeleteAddressType}?
-<div>
-  <button onClick={(e) => handleDeleteAddress(e)}>Yes</button> <button onClick={e => closeDeleteForm(e)}>No</button>
+<div className="modal-button-group">
+  <button onClick={e => closeDeleteForm(e)}>No</button> <button onClick={(e) => handleDeleteAddress(e)}>Yes</button>
   </div>
 </div>
         </div>
       }
+    <ul className="notifications">
+      { // notification list
+        notifications.map((notification, i) => <li key={i}>{notification}</li>)
+      }
+    </ul>
     </div>
   );
 }
