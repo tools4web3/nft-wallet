@@ -45,8 +45,8 @@ function App() {
   const [notifications, setNotifications] = useState([]);
 
   const NOTIFICATION_MAPPER = {
-    'danger': 'item--red',
-    'default': 'item--default'
+    danger: "item--red",
+    default: "item--default",
   };
 
   function handleSendAmount(value) {
@@ -54,58 +54,56 @@ function App() {
   }
 
   function handleSendAddress(value) {
-    const _tempSendColor = value in whitelist ? whitelist[value] : "transparent";
+    const _tempSendColor =
+      value in whitelist ? whitelist[value] : "transparent";
     setTempSendColor(_tempSendColor);
     setTempSendAddress(value);
   }
 
   async function handleSendInputs() {
     // real send happens here, should check if address is whitelisted, validate amount value
-    // console.log("transs tempSendToken", tempSendToken);
     if (!(tempSendAddress in whitelist)) {
-      console.log("tempSendToken", tempSendAddress, whitelist);
-      pushNotification(`The address ${tempSendAddress} is not in the whitelist, please add it to the whitelist first!`, 'danger');
+      pushNotification(
+        `The address ${tempSendAddress} is not in the whitelist, please add it to the whitelist first!`,
+        "danger"
+      );
       return;
     }
 
     try {
       if (tempSendToken) {
-        console.log("transactiong");
-  
         const signer = ethProvider.getSigner();
-  
         const contract = new ethers.Contract(tempSendToken, ERC20ABI, signer);
-  
-        const transactionHash = await contract.transfer(
+
+        await contract.transfer(
           tempSendAddress,
           ethers.utils.parseUnits(tempSendAmount, tempSendDecimals),
           {
             from: accountId,
           }
         );
-        console.log("transactionHash", transactionHash);
       } else {
         const params = [
           {
             from: accountId,
             to: tempSendAddress,
-            value: ethers.utils.parseUnits(tempSendAmount, "ether").toHexString(),
+            value: ethers.utils
+              .parseUnits(tempSendAmount, "ether")
+              .toHexString(),
           },
         ];
-  
-        const transactionHash = await ethProvider.send(
-          "eth_sendTransaction",
-          params
-        );
-        console.log("transactionHash", transactionHash);
+
+        await ethProvider.send("eth_sendTransaction", params);
       }
-      pushNotification("your transaction is being processed, you should get notified by the metamask extension soon", "default");
+      pushNotification(
+        "your transaction is being processed, you should get notified by the metamask extension soon",
+        "default"
+      );
       setTempSendToken("");
       setTempSendDecimals("");
       setTempSendAddress("");
       setTempSendAmount("");
-    
-    } catch(e) {
+    } catch (e) {
       pushNotification(e.message, "danger");
     }
   }
@@ -143,7 +141,7 @@ function App() {
     }
     tempTokens[network.chainId][tempTokenAddress] = null;
     pushNotification(`${tempTokenAddress} has been added!`, "default");
-    console.log(tempTokens);
+
     setTokens({ ...tempTokens });
     localStorage.setItem("tokens", JSON.stringify(tempTokens));
 
@@ -207,14 +205,20 @@ function App() {
     _whitelist[tempWhitelist] = tempWhitelistColor;
     setWhitelist({ ..._whitelist });
     localStorage.setItem("whitelist", JSON.stringify(_whitelist));
-    pushNotification(`${tempWhitelist} has been added to whitelist!`, "default");
+    pushNotification(
+      `${tempWhitelist} has been added to whitelist!`,
+      "default"
+    );
     setTempWhitelist("");
   }
 
   function handleRemoveWhitelist() {
     let _whitelist = whitelist;
     delete _whitelist[tempDeleteAddressCandidate];
-    pushNotification(`${tempDeleteAddressCandidate} has been removed from whitelist!`, "default");
+    pushNotification(
+      `${tempDeleteAddressCandidate} has been removed from whitelist!`,
+      "default"
+    );
     setWhitelist({ ..._whitelist });
     localStorage.setItem("whitelist", JSON.stringify(_whitelist));
   }
@@ -243,51 +247,35 @@ function App() {
   }
 
   async function login() {
-    console.log("logging in");
-    const prov = await ethProvider.send("eth_requestAccounts", []);
-    console.log("prov", prov);
+    await ethProvider.send("eth_requestAccounts", []);
 
     const signer = ethProvider.getSigner();
-    console.log("signer", signer);
-    // console.log("Account:", await signer.getAddress());
+
     const accId = await signer.getAddress();
     setAccountId(accId);
     setIsLoggedIn(true);
 
-    ethProvider.provider.on('accountsChanged', () => {
-      setNotice("An account change is detected, please refresh the page to prevent inconvinience");
-    }); 
-    // console.log(await ethProvider.getBalance("ethers.eth"));
-    
+    ethProvider.provider.on("accountsChanged", () => {
+      setNotice(
+        "An account change is detected, please refresh the page to prevent inconvinience"
+      );
+    });
   }
 
   async function handleClickLogin() {
     try {
       await login();
       pushNotification("Login success", "default");
-    } catch(e) {
+    } catch (e) {
       pushNotification(e.message, "danger");
     }
   }
 
   function pushNotification(message, type) {
-    setNotifications([...notifications, {message, type}]);
-    // setTimeout(() => {
-    //   setNotifications(notifications.slice(0,-1));
-    //   console.log(notifications);
-    // }, 5000);
+    setNotifications([...notifications, { message, type }]);
   }
-  // const prevCountRef = useRef([]);
-  // notifications clearer
+
   useEffect(() => {
-    // if (prevCountRef.current.length > notifications.length) {
-
-    // } else {
-
-    // }
-    // console.log(prevCountRef.current.length, notifications.length);
-    // prevCountRef.current = notifications;
-    console.log("notif", notifications);
     const timer = setTimeout(() => {
       setNotifications(notifications.slice(1));
     }, 5000);
@@ -302,52 +290,22 @@ function App() {
         "any"
       );
       setEthProvider(provider);
-      console.log("provider", provider);
 
       const netObj = await provider.getNetwork();
       setNetwork(netObj);
 
-      console.log("netObj", netObj);
-      // console.log("isMetaMaskConnected", isMetaMaskConnected);
-
-      // await isMetaMaskConnected().then((connected) => {
-      //   if (connected) {
-      //     console.log("already connected");
-      //     // metamask is connected
-      //   } else {
-      //     console.log("not connected");
-      //     // metamask is not connected
-      //   }
-      // });
-      // console.log("ethProvider", ethProvider);
-
       provider.on("network", (newNetwork, oldNetwork) => {
-        // When a Provider makes its initial connection, it emits a "network"
-        // event with a null oldNetwork along with the newNetwork. So, if the
-        // oldNetwork exists, it represents a changing network
         if (oldNetwork) {
-          setNotice("A network change is detected, please refresh the page to prevent inconvinience");
+          setNotice(
+            "A network change is detected, please refresh the page to prevent inconvinience"
+          );
         }
       });
-
-      
     }
 
     if (typeof window.ethereum !== "undefined") {
-      // console.log('MetaMask is installed!');
-      // setNotice("Metamask extension is detected, nice");
       setMetamaskExist(true);
       initEthers();
-      // const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-      // provider.on("network", (newNetwork, oldNetwork) => {
-      //     // When a Provider makes its initial connection, it emits a "network"
-      //     // event with a null oldNetwork along with the newNetwork. So, if the
-      //     // oldNetwork exists, it represents a changing network
-      //     if (oldNetwork) {
-      //         window.location.reload();
-      //     }
-      // });
-      // checkMetamaskConnected();
     } else {
       setNotice("Metamask extension is not detected, please install it first");
     }
@@ -390,8 +348,6 @@ function App() {
 
   useEffect(() => {
     async function tokenDetailsSetter() {
-      // if (tokens) {
-      //   if (network) {
       let _chosenToken = {};
       if (
         accountId &&
@@ -400,60 +356,38 @@ function App() {
         network &&
         network.chainId in tokens
       ) {
-        console.log("asup teu?");
         const signer = ethProvider.getSigner();
 
         await Promise.all(
           Object.keys(tokens[network.chainId]).map(
             async (_tempTokenAddress, i) => {
               try {
-                // console.log("i _tempTokenAddress", _tempTokenAddress, i)
                 const contract = new ethers.Contract(
                   _tempTokenAddress,
                   ERC20ABI,
                   signer
                 );
-                // console.log("contract jalan teu?", contract);
+
                 const _tempTokenDecimals = await contract.decimals();
-                // console.log("terus errorna dimana?1");
-
                 const _tempTokenCurrency = await contract.symbol();
-                // console.log("terus errorna dimana?2");
-
                 const getBalance = await contract.balanceOf(accountId);
-                // console.log("terus errorna dimana?3");
 
                 const _tempTokenBalance = ethers.utils.formatUnits(
                   getBalance,
                   _tempTokenDecimals
                 );
-                // console.log("terus errorna dimana?");
+
                 _chosenToken[_tempTokenAddress] = {};
                 _chosenToken[_tempTokenAddress].currency = _tempTokenCurrency;
                 _chosenToken[_tempTokenAddress].balance = _tempTokenBalance;
                 _chosenToken[_tempTokenAddress].decimals = _tempTokenDecimals;
-                // console.log("i", i, _tempTokenBalance, _chosenToken);
               } catch (e) {}
             }
           )
         );
       }
-      //   }
-      // }
+
       setChosenToken(_chosenToken);
-      console.log("_chosenToken", _chosenToken);
-      // const signer = ethProvider.getSigner();
-
-      // const contract = new ethers.Contract(_tempTokenAddress, ERC20ABI, signer);
-
-      // const _tempTokenDecimals = await contract.decimals();
-      // const _tempTokenCurrency = await contract.symbol();
-      // const getBalance = await contract.balanceOf(accountId);
-      // const _tempTokenBalance = ethers.utils.formatUnits(getBalance, _tempTokenDecimals);
-      // const _tempTokenBalance ="";
-      // const _tempTokenCurrency ="";
-
-      //     return <div>{_tempTokenBalance} {_tempTokenCurrency}</div>;
     }
     tokenDetailsSetter();
   }, [ethProvider, tokens, network, accountId]);
@@ -462,12 +396,10 @@ function App() {
     async function mainTokenDetailSetter() {
       if (accountId && ethProvider) {
         let _tempToken = {};
-        // console.log("ethProvider", ethProvider);
+
         const _tempRawBalance = await ethProvider.getBalance(accountId);
-        // const _tempMainTokenDecimals = 0//await ethProvider.decimals();
-        // const _tempMainTokenCurrency = 0//await ethProvider.symbol();
         const _tempMainTokenBalance = ethers.utils.formatEther(_tempRawBalance);
-        // console.log("_tempMainTokenBalance", _tempMainTokenBalance, _tempMainTokenDecimals, _tempMainTokenCurrency);
+
         _tempToken.balance = _tempMainTokenBalance;
         _tempToken.currency = "";
 
@@ -484,35 +416,28 @@ function App() {
     mainTokenDetailSetter();
   }, [ethProvider, accountId, network]);
 
-  // useEffect(() => {
-  //   localStorage.setItem("whitelist", whitelist);
-  // }, [whitelist]);
-
-  // useEffect(() => {
-  //   if (ethProvider) {
-  //     if (network) {
-
-  //     }
-  //   }
-  // }, [ethProvider, network]);
-
   return (
     <div className="main">
-      {notice && <div className="notice">
-        {notice}
-      </div>}
+      {notice && <div className="notice">{notice}</div>}
       <header className="header">
         <div className="network-info">
-          {metamaskExist && network && "name" in network && <div>Connected to network: <b>{network?.name}</b></div>}
+          {metamaskExist && network && "name" in network && (
+            <div>
+              Connected to network: <b>{network?.name}</b>
+            </div>
+          )}
         </div>
         <div className="account-info">
           {isLoggedIn ? (
             <div>
               Logged in as: <b>{accountId}</b>
             </div>
+          ) : metamaskExist ? (
+            <button onClick={() => handleClickLogin()}>
+              Connect to Metamask
+            </button>
           ) : (
-            metamaskExist ?
-            <button onClick={() => handleClickLogin()}>Connect to Metamask</button> : ''
+            ""
           )}
         </div>
       </header>
@@ -545,7 +470,10 @@ function App() {
                       {chosenToken[token].balance} {chosenToken[token].currency}
                     </div>
                   </div>
-                  <button className="button--red" onClick={() => handleRemoveButton("token", token)}>
+                  <button
+                    className="button--red"
+                    onClick={() => handleRemoveButton("token", token)}
+                  >
                     Remove
                   </button>
                   <button
@@ -593,7 +521,15 @@ function App() {
                 <li key={i}>
                   <div className="whitelist-content">
                     <div className="whitelist-address">{address}</div>
-                    <div className="whitelist-color whitelist-color-output" style={{backgroundColor: address in whitelist ? whitelist[address] : `transparent`}}></div>
+                    <div
+                      className="whitelist-color whitelist-color-output"
+                      style={{
+                        backgroundColor:
+                          address in whitelist
+                            ? whitelist[address]
+                            : `transparent`,
+                      }}
+                    ></div>
                   </div>
                   <button
                     className="button--red"
@@ -612,7 +548,12 @@ function App() {
                     value={tempWhitelist}
                     onChange={(e) => handleTempWhitelist(e.target.value)}
                   />
-                  <input className="whitelist-color color-picker" type="color" value={tempWhitelistColor} onChange={e => setTempWhitelistColor(e.target.value)} />
+                  <input
+                    className="whitelist-color color-picker"
+                    type="color"
+                    value={tempWhitelistColor}
+                    onChange={(e) => setTempWhitelistColor(e.target.value)}
+                  />
                 </div>
                 <button onClick={() => handleAddWhitelist()}>
                   Add whitelist
@@ -624,10 +565,10 @@ function App() {
       ) : (
         <div className="no-metamask">
           <p>
-            {
-            !isLoggedIn ? `Please connect your metamask first` : `Metamask extension is not detected, please install metamask first
-            then reload this page`
-            }
+            {!isLoggedIn
+              ? `Please connect your metamask first`
+              : `Metamask extension is not detected, please install metamask first
+            then reload this page`}
           </p>
         </div>
       )}
@@ -663,30 +604,44 @@ function App() {
                   : `on native token (your balance is ${mainToken.balance} ${mainToken.currency})`}
               </div>
 
-<div className="input-send-container">
-
-              <input
-                type="text"
-                placeholder="Target address"
-                value={tempSendAddress}
-                onChange={(e) => handleSendAddress(e.target.value)}
-              />
-              <div className="address-color-output" style={{backgroundColor: tempSendColor}}></div>
+              <div className="input-send-container">
+                <input
+                  type="text"
+                  placeholder="Target address"
+                  value={tempSendAddress}
+                  onChange={(e) => handleSendAddress(e.target.value)}
+                />
+                <div
+                  className="address-color-output"
+                  style={{ backgroundColor: tempSendColor }}
+                ></div>
               </div>
               <div className="input-send-container">
-              <input
-                type="text"
-                placeholder="Amount"
-                value={tempSendAmount}
-                onChange={(e) => handleSendAmount(e.target.value)}
-              />
-              <div className="address-token-currency">
-              {tempSendToken ? chosenToken[tempSendToken].currency : mainToken.currency}
-              </div>
+                <input
+                  type="text"
+                  placeholder="Amount"
+                  value={tempSendAmount}
+                  onChange={(e) => handleSendAmount(e.target.value)}
+                />
+                <div className="address-token-currency">
+                  {tempSendToken
+                    ? chosenToken[tempSendToken].currency
+                    : mainToken.currency}
+                </div>
               </div>
               <div className="modal-button-group">
-                <button className="button--red" onClick={(e) => closeSendForm(e)}>Cancel</button>{" "}
-                <button className="button--green" onClick={() => handleSendInputs()}>Send</button>
+                <button
+                  className="button--red"
+                  onClick={(e) => closeSendForm(e)}
+                >
+                  Cancel
+                </button>{" "}
+                <button
+                  className="button--green"
+                  onClick={() => handleSendInputs()}
+                >
+                  Send
+                </button>
               </div>
             </div>
           </div>
@@ -699,8 +654,18 @@ function App() {
             Are you sure you want to delete {tempDeleteAddressCandidate} from{" "}
             {tempDeleteAddressType}?
             <div className="modal-button-group">
-              <button className="button--red" onClick={(e) => closeDeleteForm(e)}>No</button>{" "}
-              <button className="button--green" onClick={(e) => handleDeleteAddress(e)}>Yes</button>
+              <button
+                className="button--red"
+                onClick={(e) => closeDeleteForm(e)}
+              >
+                No
+              </button>{" "}
+              <button
+                className="button--green"
+                onClick={(e) => handleDeleteAddress(e)}
+              >
+                Yes
+              </button>
             </div>
           </div>
         </div>
@@ -709,7 +674,9 @@ function App() {
         {
           // notification list
           notifications.map((notification, i) => (
-            <li key={i} className={NOTIFICATION_MAPPER[notification.type]}>{notification.message}</li>
+            <li key={i} className={NOTIFICATION_MAPPER[notification.type]}>
+              {notification.message}
+            </li>
           ))
         }
       </ul>
