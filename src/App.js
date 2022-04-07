@@ -35,7 +35,8 @@ function App() {
   const [tempSendToken, setTempSendToken] = useState("");
   const [tempSendDecimals, setTempSendDecimals] = useState(0);
 
-  const [tempDeleteAddressCandidate, setTempDeleteAddressCandidate] = useState("");
+  const [tempDeleteAddressCandidate, setTempDeleteAddressCandidate] =
+    useState("");
   const [tempDeleteAddressType, setTempDeleteAddressType] = useState("token");
   const [shouldShowDeletePrompt, setShouldShowDeletePrompt] = useState(false);
 
@@ -54,45 +55,50 @@ function App() {
     // console.log("transs tempSendToken", tempSendToken);
     if (!(tempSendAddress in whitelist)) {
       console.log("tempSendToken", tempSendAddress, whitelist);
-      alert("ADDRESS IS NOT IN WHITELIST");
-      return
+      pushNotification(`The address ${tempSendAddress} is not in the whitelist, please add it to the whitelist first!`);
+      return;
     }
 
-    if (tempSendToken) {
-      console.log("transactiong");
-      
-      const signer = ethProvider.getSigner();
-
-      const contract = new ethers.Contract(tempSendToken, ERC20ABI, signer);
-
-      const transactionHash = await contract.transfer(
-        tempSendAddress,
-        ethers.utils.parseUnits(tempSendAmount, tempSendDecimals),
-        {
-          from: accountId,
-        }
-      );
-      console.log("transactionHash", transactionHash);
-    } else {
-      const params = [
-        {
-          from: accountId,
-          to: tempSendAddress,
-          value: ethers.utils.parseUnits(tempSendAmount, "ether").toHexString(),
-        },
-      ];
-
-      const transactionHash = await ethProvider.send(
-        "eth_sendTransaction",
-        params
-      );
-      console.log("transactionHash", transactionHash);
+    try {
+      if (tempSendToken) {
+        console.log("transactiong");
+  
+        const signer = ethProvider.getSigner();
+  
+        const contract = new ethers.Contract(tempSendToken, ERC20ABI, signer);
+  
+        const transactionHash = await contract.transfer(
+          tempSendAddress,
+          ethers.utils.parseUnits(tempSendAmount, tempSendDecimals),
+          {
+            from: accountId,
+          }
+        );
+        console.log("transactionHash", transactionHash);
+      } else {
+        const params = [
+          {
+            from: accountId,
+            to: tempSendAddress,
+            value: ethers.utils.parseUnits(tempSendAmount, "ether").toHexString(),
+          },
+        ];
+  
+        const transactionHash = await ethProvider.send(
+          "eth_sendTransaction",
+          params
+        );
+        console.log("transactionHash", transactionHash);
+      }
+  
+      setTempSendToken("");
+      setTempSendDecimals("");
+      setTempSendAddress("");
+      setTempSendAmount("");
+    
+    } catch(e) {
+      pushNotification(e.message);
     }
-
-    setTempSendToken("");
-    setTempSendDecimals("");
-    setTempSendAddress("");
-    setTempSendAmount("");
   }
 
   async function handleTempTokenAddress(_tempTokenAddress) {
@@ -127,7 +133,7 @@ function App() {
       tempTokens[network.chainId] = {};
     }
     tempTokens[network.chainId][tempTokenAddress] = null;
-
+    pushNotification(`${tempTokenAddress} has been added!`);
     console.log(tempTokens);
     setTokens({ ...tempTokens });
     localStorage.setItem("tokens", JSON.stringify(tempTokens));
@@ -176,15 +182,17 @@ function App() {
   function isAddress(address) {
     try {
       ethers.utils.getAddress(address);
-    } catch (e) { return false; }
+    } catch (e) {
+      return false;
+    }
     return true;
   }
 
   function handleAddWhitelist() {
     if (!isAddress(tempWhitelist)) {
       // alert("address invalid!");
-      pushNotification("address invalid!");
-      return
+      pushNotification("address is invalid!");
+      return;
     }
     let _whitelist = whitelist;
     _whitelist[tempWhitelist] = null;
@@ -197,14 +205,15 @@ function App() {
   function handleRemoveWhitelist() {
     let _whitelist = whitelist;
     delete _whitelist[tempDeleteAddressCandidate];
+    pushNotification(`${tempDeleteAddressCandidate} has been deleted from whitelist!`);
     setWhitelist({ ..._whitelist });
     localStorage.setItem("whitelist", JSON.stringify(_whitelist));
   }
 
   function handleRemoveButton(addressType, address) {
-setTempDeleteAddressCandidate(address);
-setTempDeleteAddressType(addressType);
-setShouldShowDeletePrompt(true);
+    setTempDeleteAddressCandidate(address);
+    setTempDeleteAddressType(addressType);
+    setShouldShowDeletePrompt(true);
   }
 
   function handleDeleteAddress() {
@@ -248,20 +257,19 @@ setShouldShowDeletePrompt(true);
   // const prevCountRef = useRef([]);
   // notifications clearer
   useEffect(() => {
-
     // if (prevCountRef.current.length > notifications.length) {
 
     // } else {
-      
+
     // }
     // console.log(prevCountRef.current.length, notifications.length);
     // prevCountRef.current = notifications;
+    console.log("notif", notifications);
     const timer = setTimeout(() => {
       setNotifications(notifications.slice(1));
-      console.log(notifications);
     }, 5000);
     return () => clearTimeout(timer);
-  }, [notifications])
+  }, [JSON.stringify(notifications)]);
 
   // only after render
   useEffect(() => {
@@ -462,7 +470,9 @@ setShouldShowDeletePrompt(true);
         </div>
         <div className="account-info">
           {isLoggedIn ? (
-            <div>Logged in as: <b>{accountId}</b></div>
+            <div>
+              Logged in as: <b>{accountId}</b>
+            </div>
           ) : (
             <button onClick={() => login()}>Connect to Metamask</button>
           )}
@@ -548,7 +558,9 @@ setShouldShowDeletePrompt(true);
                   <div className="whitelist-content">
                     <div className="whitelist-address">{address}</div>
                   </div>
-                  <button onClick={() => handleRemoveButton("whitelist", address)}>
+                  <button
+                    onClick={() => handleRemoveButton("whitelist", address)}
+                  >
                     Remove
                   </button>
                 </li>
@@ -620,28 +632,34 @@ setShouldShowDeletePrompt(true);
                 onChange={(e) => handleSendAmount(e.target.value)}
               />
               <div className="modal-button-group">
-                <button onClick={() => handleSendInputs()}>Send</button> <button onClick={(e) => closeSendForm(e)}>Cancel</button>
+                <button onClick={(e) => closeSendForm(e)}>Cancel</button>{" "}
+                <button onClick={() => handleSendInputs()}>Send</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {shouldShowDeletePrompt && <div className="overlay" onClick={e => closeDeleteForm(e)}>
-        <div className="modal-send">
-
-Are you sure you want to delete {tempDeleteAddressCandidate} from {tempDeleteAddressType}?
-<div className="modal-button-group">
-  <button onClick={e => closeDeleteForm(e)}>No</button> <button onClick={(e) => handleDeleteAddress(e)}>Yes</button>
-  </div>
-</div>
+      {shouldShowDeletePrompt && (
+        <div className="overlay" onClick={(e) => closeDeleteForm(e)}>
+          <div className="modal-send">
+            Are you sure you want to delete {tempDeleteAddressCandidate} from{" "}
+            {tempDeleteAddressType}?
+            <div className="modal-button-group">
+              <button onClick={(e) => closeDeleteForm(e)}>No</button>{" "}
+              <button onClick={(e) => handleDeleteAddress(e)}>Yes</button>
+            </div>
+          </div>
         </div>
-      }
-    <ul className="notifications">
-      { // notification list
-        notifications.map((notification, i) => <li key={i}>{notification}</li>)
-      }
-    </ul>
+      )}
+      <ul className="notifications">
+        {
+          // notification list
+          notifications.map((notification, i) => (
+            <li key={i}>{notification}</li>
+          ))
+        }
+      </ul>
     </div>
   );
 }
