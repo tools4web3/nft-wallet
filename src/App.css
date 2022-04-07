@@ -196,3 +196,16 @@ b {
   margin: 10px;
   border-radius: 5px;
 }
+
+.notice {
+  color: #fff;
+  text-align: center;
+  background: #cf3d3d;
+  padding: 12px;
+  font-size: 90%;
+}
+
+.footer-ul li {
+  list-style: disc;
+  margin: 10px 30px;
+}

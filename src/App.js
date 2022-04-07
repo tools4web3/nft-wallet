@@ -1,5 +1,5 @@
 import "./App.css";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { ERC20ABI, CHAIN_DETAILS } from "./constants/constants.js";
 import { ethers } from "ethers";
 
@@ -297,6 +297,15 @@ function App() {
       //   }
       // });
       // console.log("ethProvider", ethProvider);
+
+      provider.on("network", (newNetwork, oldNetwork) => {
+        // When a Provider makes its initial connection, it emits a "network"
+        // event with a null oldNetwork along with the newNetwork. So, if the
+        // oldNetwork exists, it represents a changing network
+        if (oldNetwork) {
+          setNotice("A network change is detected, please refresh the page to prevent inconvinience");
+        }
+      });
     }
 
     if (typeof window.ethereum !== "undefined") {
@@ -464,6 +473,9 @@ function App() {
 
   return (
     <div className="main">
+      {notice && <div className="notice">
+        {notice}
+      </div>}
       <header className="header">
         <div className="network-info">
           Connected to network: <b>{network?.name}</b>
