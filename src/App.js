@@ -349,7 +349,7 @@ function App() {
       // });
       // checkMetamaskConnected();
     } else {
-      setNotice("Metamask extension is NOT detected");
+      setNotice("Metamask extension is not detected, please install it first");
     }
 
     let _tempTokens = JSON.parse(localStorage.getItem("tokens"));
@@ -503,7 +503,7 @@ function App() {
       </div>}
       <header className="header">
         <div className="network-info">
-          Connected to network: <b>{network?.name}</b>
+          {metamaskExist && network && "name" in network && <div>Connected to network: <b>{network?.name}</b></div>}
         </div>
         <div className="account-info">
           {isLoggedIn ? (
@@ -511,10 +511,9 @@ function App() {
               Logged in as: <b>{accountId}</b>
             </div>
           ) : (
-            <button onClick={() => handleClickLogin()}>Connect to Metamask</button>
+            metamaskExist ?
+            <button onClick={() => handleClickLogin()}>Connect to Metamask</button> : ''
           )}
-          {/* <button onClick={() => login()}>CONNECT</button>
-        <div>accountid: {accountId}</div> */}
         </div>
       </header>
       {metamaskExist && isLoggedIn ? (
