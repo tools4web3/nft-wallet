@@ -60,6 +60,10 @@ function App() {
     setTempSendAddress(value);
   }
 
+  function handleChangeSendAddress(value) {
+    setTempSendAddress(value);
+  }
+
   async function handleSendInputs() {
     // real send happens here, should check if address is whitelisted, validate amount value
     if (!(tempSendAddress in whitelist)) {
@@ -103,6 +107,8 @@ function App() {
           tokenDetailsSetter();
         });
       }
+
+      setShouldShowSendForm(false);
       pushNotification(
         "your transaction is being processed, you should get notified by the metamask extension soon",
         "default"
@@ -267,6 +273,7 @@ function App() {
       setNotice(
         "An account change is detected, please refresh the page to prevent inconvinience"
       );
+      window.location.reload();
     });
   }
 
@@ -307,6 +314,7 @@ function App() {
           setNotice(
             "A network change is detected, please refresh the page to prevent inconvinience"
           );
+          window.location.reload();
         }
       });
     }
@@ -400,7 +408,7 @@ function App() {
   useEffect(() => {
     
     tokenDetailsSetter();
-  }, [ethProvider, tokens, network, accountId]);
+  }, [ethProvider, tokens, network, accountId, tempSendToken, tempSendDecimals]);
 
   useEffect(() => {
     async function mainTokenDetailSetter() {
@@ -625,6 +633,14 @@ function App() {
                   className="address-color-output"
                   style={{ backgroundColor: tempSendColor }}
                 ></div>
+                <select className='select-whitelist-address' name='option' onChange={(e) => handleChangeSendAddress(e.target.value)}>
+    {
+      Object.keys(whitelist).map((address) => (
+        <option value={address}>{address} {whitelist[address]}</option>
+      ))
+      
+    }
+</select>
               </div>
               <div className="input-send-container">
                 <input

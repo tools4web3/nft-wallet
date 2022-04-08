@@ -250,3 +250,12 @@ b {
 .button--green {
   background: #2eb74b;
 }
+
+.select-whitelist-address {
+  border: 0;
+  padding: 15px 0;
+  border-bottom: 2px solid #ddd;
+  font-size: 109%;
+  background: transparent;
+  outline: none !important;
+}
