@@ -75,13 +75,17 @@ function App() {
         const signer = ethProvider.getSigner();
         const contract = new ethers.Contract(tempSendToken, ERC20ABI, signer);
 
-        await contract.transfer(
+        const txHash = await contract.transfer(
           tempSendAddress,
           ethers.utils.parseUnits(tempSendAmount, tempSendDecimals),
           {
             from: accountId,
           }
         );
+
+        ethProvider.once(txHash, () => {
+          tokenDetailsSetter();
+        });
       } else {
         const params = [
           {
@@ -93,7 +97,11 @@ function App() {
           },
         ];
 
-        await ethProvider.send("eth_sendTransaction", params);
+        const txHash = await ethProvider.send("eth_sendTransaction", params);
+
+        ethProvider.once(txHash, () => {
+          tokenDetailsSetter();
+        });
       }
       pushNotification(
         "your transaction is being processed, you should get notified by the metamask extension soon",
@@ -346,49 +354,51 @@ function App() {
     }
   }, [ethProvider, accounts]);
 
-  useEffect(() => {
-    async function tokenDetailsSetter() {
-      let _chosenToken = {};
-      if (
-        accountId &&
-        ethProvider &&
-        tokens &&
-        network &&
-        network.chainId in tokens
-      ) {
-        const signer = ethProvider.getSigner();
+  async function tokenDetailsSetter() {
+    let _chosenToken = {};
+    if (
+      accountId &&
+      ethProvider &&
+      tokens &&
+      network &&
+      network.chainId in tokens
+    ) {
+      const signer = ethProvider.getSigner();
 
-        await Promise.all(
-          Object.keys(tokens[network.chainId]).map(
-            async (_tempTokenAddress, i) => {
-              try {
-                const contract = new ethers.Contract(
-                  _tempTokenAddress,
-                  ERC20ABI,
-                  signer
-                );
+      await Promise.all(
+        Object.keys(tokens[network.chainId]).map(
+          async (_tempTokenAddress, i) => {
+            try {
+              const contract = new ethers.Contract(
+                _tempTokenAddress,
+                ERC20ABI,
+                signer
+              );
 
-                const _tempTokenDecimals = await contract.decimals();
-                const _tempTokenCurrency = await contract.symbol();
-                const getBalance = await contract.balanceOf(accountId);
+              const _tempTokenDecimals = await contract.decimals();
+              const _tempTokenCurrency = await contract.symbol();
+              const getBalance = await contract.balanceOf(accountId);
 
-                const _tempTokenBalance = ethers.utils.formatUnits(
-                  getBalance,
-                  _tempTokenDecimals
-                );
+              const _tempTokenBalance = ethers.utils.formatUnits(
+                getBalance,
+                _tempTokenDecimals
+              );
 
-                _chosenToken[_tempTokenAddress] = {};
-                _chosenToken[_tempTokenAddress].currency = _tempTokenCurrency;
-                _chosenToken[_tempTokenAddress].balance = _tempTokenBalance;
-                _chosenToken[_tempTokenAddress].decimals = _tempTokenDecimals;
-              } catch (e) {}
-            }
-          )
-        );
-      }
-
-      setChosenToken(_chosenToken);
+              _chosenToken[_tempTokenAddress] = {};
+              _chosenToken[_tempTokenAddress].currency = _tempTokenCurrency;
+              _chosenToken[_tempTokenAddress].balance = _tempTokenBalance;
+              _chosenToken[_tempTokenAddress].decimals = _tempTokenDecimals;
+            } catch (e) {}
+          }
+        )
+      );
     }
+
+    setChosenToken(_chosenToken);
+  }
+
+  useEffect(() => {
+    
     tokenDetailsSetter();
   }, [ethProvider, tokens, network, accountId]);
 
