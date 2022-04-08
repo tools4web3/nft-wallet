@@ -30,6 +30,7 @@ function App() {
   const [whitelist, setWhitelist] = useState({});
   const [tempWhitelist, setTempWhitelist] = useState("");
   const [tempWhitelistColor, setTempWhitelistColor] = useState("#26cfc4");
+  const [tempWhitelistAlias, setTempWhitelistAlias] = useState("");
 
   const [tempSendAmount, setTempSendAmount] = useState("");
   const [tempSendAddress, setTempSendAddress] = useState("");
@@ -53,6 +54,12 @@ function App() {
     setTempSendAmount(value);
   }
 
+  function handleSendMaxAmount() {
+    const _sendAmount = tempSendToken ? chosenToken[tempSendToken].balance : mainToken.balance;
+    console.log("_sendAmount", _sendAmount);
+    setTempSendAmount(_sendAmount);
+  }
+
   function handleSendAddress(value) {
     const _tempSendColor =
       value in whitelist ? whitelist[value] : "transparent";
@@ -61,6 +68,11 @@ function App() {
   }
 
   function handleChangeSendAddress(value) {
+    if (value in whitelist) {
+      setTempSendColor(whitelist[value].color);
+    } else {
+      setTempSendColor("transparent");
+    }
     setTempSendAddress(value);
   }
 
@@ -88,7 +100,20 @@ function App() {
         );
 
         ethProvider.once(txHash, () => {
-          tokenDetailsSetter();
+          pushNotification(
+        "transaction done!",
+        "default"
+      );
+          // tokenDetailsSetter();
+          setTimeout(() => {
+            tokenDetailsSetter();
+            pushNotification(
+              "transaction done!",
+              "default"
+            );
+            console.log("transdonde");
+          },3000);
+          console.log("txHash", txHash);
         });
       } else {
         const params = [
@@ -104,7 +129,17 @@ function App() {
         const txHash = await ethProvider.send("eth_sendTransaction", params);
 
         ethProvider.once(txHash, () => {
-          tokenDetailsSetter();
+          
+      console.log("txHash", txHash);
+      setTimeout(() => {
+        tokenDetailsSetter();
+        pushNotification(
+          "transaction done!",
+          "default"
+        );
+        console.log("transdonde");
+      },3000);
+      // tokenDetailsSetter();
         });
       }
 
@@ -200,6 +235,10 @@ function App() {
     setTempWhitelist(address);
   }
 
+  function handleTempWhitelistAlias(alias) {
+    setTempWhitelistAlias(alias);
+  }
+
   function isAddress(address) {
     try {
       ethers.utils.getAddress(address);
@@ -216,7 +255,10 @@ function App() {
       return;
     }
     let _whitelist = whitelist;
-    _whitelist[tempWhitelist] = tempWhitelistColor;
+    _whitelist[tempWhitelist] = {
+      color: tempWhitelistColor,
+      alias: tempWhitelistAlias,
+    };
     setWhitelist({ ..._whitelist });
     localStorage.setItem("whitelist", JSON.stringify(_whitelist));
     pushNotification(
@@ -537,17 +579,18 @@ function App() {
             <ul className="whitelist-list">
               {Object.keys(whitelist).map((address, i) => (
                 <li key={i}>
-                  <div className="whitelist-content">
-                    <div className="whitelist-address">{address}</div>
-                    <div
+                  <div
                       className="whitelist-color whitelist-color-output"
                       style={{
                         backgroundColor:
                           address in whitelist
-                            ? whitelist[address]
+                            ? whitelist[address].color
                             : `transparent`,
                       }}
                     ></div>
+                  <div className="whitelist-content">
+                    {whitelist[address].alias && <div className="whitelist-alias">{whitelist[address].alias}</div>}
+                    <div className="whitelist-address">{address}</div>
                   </div>
                   <button
                     className="button--red"
@@ -566,12 +609,15 @@ function App() {
                     value={tempWhitelist}
                     onChange={(e) => handleTempWhitelist(e.target.value)}
                   />
-                  <input
-                    className="whitelist-color color-picker"
-                    type="color"
-                    value={tempWhitelistColor}
-                    onChange={(e) => setTempWhitelistColor(e.target.value)}
-                  />
+                  <div className="input-whitelist-alias-container">
+                    <input className="input-whitelist-alias" type="text" placeholder="alias" value={tempWhitelistAlias} onChange={(e) => handleTempWhitelistAlias(e.target.value)} />
+                    <input
+                      className="color-picker"
+                      type="color"
+                      value={tempWhitelistColor}
+                      onChange={(e) => setTempWhitelistColor(e.target.value)}
+                    />
+                  </div>
                 </div>
                 <button onClick={() => handleAddWhitelist()}>
                   Add whitelist
@@ -618,12 +664,12 @@ function App() {
               <div className="modal-text">
                 Sending via {network?.name}{" "}
                 {tempSendToken
-                  ? `on token address ${tempSendToken} (your balance is ${chosenToken[tempSendToken].balance} ${chosenToken[tempSendToken].currency})`
-                  : `on native token (your balance is ${mainToken.balance} ${mainToken.currency})`}
+                  ? `on token address ${tempSendToken}`
+                  : `on native token`}
               </div>
 
               <div className="input-send-container">
-                <input
+                {/* <input
                   type="text"
                   placeholder="Target address"
                   value={tempSendAddress}
@@ -632,15 +678,20 @@ function App() {
                 <div
                   className="address-color-output"
                   style={{ backgroundColor: tempSendColor }}
-                ></div>
+                ></div> */}
                 <select className='select-whitelist-address' name='option' onChange={(e) => handleChangeSendAddress(e.target.value)}>
+                  <option>Choose Whitelist Address</option>
     {
       Object.keys(whitelist).map((address) => (
-        <option value={address}>{address} {whitelist[address]}</option>
+        <option value={address} key={address}>{whitelist[address].alias ? `${whitelist[address].alias} (${address})` : address}</option>
       ))
       
     }
 </select>
+<div
+                  className="address-color-output"
+                  style={{ backgroundColor: tempSendColor }}
+                ></div>
               </div>
               <div className="input-send-container">
                 <input
@@ -655,6 +706,12 @@ function App() {
                     : mainToken.currency}
                 </div>
               </div>
+              <div className="balance-send-info">
+{
+  tempSendToken ? `Balance: ${chosenToken[tempSendToken].balance} ${chosenToken[tempSendToken].currency}` : `Balance: ${mainToken.balance} ${mainToken.currency}`
+}
+<button className="send-max-button" onClick={() => handleSendMaxAmount()}>MAX</button>
+                </div>
               <div className="modal-button-group">
                 <button
                   className="button--red"
