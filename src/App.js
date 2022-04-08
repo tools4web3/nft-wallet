@@ -661,16 +661,6 @@ function App() {
               </div>
 
               <div className="input-send-container">
-                {/* <input
-                  type="text"
-                  placeholder="Target address"
-                  value={tempSendAddress}
-                  onChange={(e) => handleSendAddress(e.target.value)}
-                />
-                <div
-                  className="address-color-output"
-                  style={{ backgroundColor: tempSendColor }}
-                ></div> */}
                 <select
                   className="select-whitelist-address"
                   name="option"
