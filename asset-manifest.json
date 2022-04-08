@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/nft-wallet/static/css/main.a46570b2.css",
-    "main.js": "/nft-wallet/static/js/main.e1619947.js",
+    "main.css": "/nft-wallet/static/css/main.561c6792.css",
+    "main.js": "/nft-wallet/static/js/main.fd148b50.js",
     "static/js/787.a8aaf042.chunk.js": "/nft-wallet/static/js/787.a8aaf042.chunk.js",
     "index.html": "/nft-wallet/index.html",
-    "main.a46570b2.css.map": "/nft-wallet/static/css/main.a46570b2.css.map",
-    "main.e1619947.js.map": "/nft-wallet/static/js/main.e1619947.js.map",
+    "main.561c6792.css.map": "/nft-wallet/static/css/main.561c6792.css.map",
+    "main.fd148b50.js.map": "/nft-wallet/static/js/main.fd148b50.js.map",
     "787.a8aaf042.chunk.js.map": "/nft-wallet/static/js/787.a8aaf042.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.a46570b2.css",
-    "static/js/main.e1619947.js"
+    "static/css/main.561c6792.css",
+    "static/js/main.fd148b50.js"
   ]
 }
